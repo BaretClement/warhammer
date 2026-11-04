@@ -6,7 +6,7 @@ La version déployable est `index.html`. La page garde la sauvegarde locale et l
 
 Dans Supabase, ouvrez **SQL Editor**, collez le contenu de `supabase.sql`, puis exécutez-le. Les règles RLS limitent chaque compte à ses propres figurines.
 
-Pour installer le catalogue partagé de 30 kits Warhammer 40,000, ouvrez un nouvel onglet dans **SQL Editor**, collez `catalog-warhammer-40k.sql` et exécutez-le après le premier script. Le catalogue est lisible par tous, même sans compte, et modifiable uniquement depuis le SQL Editor. Les collections personnelles restent privées et accessibles uniquement à leur propriétaire.
+Pour installer ou actualiser le catalogue partagé de 30 kits Warhammer 40,000, ouvrez un nouvel onglet dans **SQL Editor**, collez `catalog-warhammer-40k.sql` et exécutez-le après le premier script. Ce fichier est réexécutable : il met à jour les fiches du catalogue sans toucher aux collections personnelles. Le catalogue est lisible par tous, même sans compte, et modifiable uniquement depuis le SQL Editor. Les collections personnelles restent privées et accessibles uniquement à leur propriétaire.
 
 Si `catalog-warhammer-40k.sql` a déjà été exécuté, exécutez aussi `supabase-catalog-public.sql` dans **SQL Editor** pour autoriser la lecture publique. Le bouton **Parcourir les figurines** affichera le catalogue sans connexion ; l’ajout à une wishlist demandera toujours de se connecter.
 
@@ -26,4 +26,4 @@ L'export JSON reste disponible hors connexion. Les modifications locales restent
 
 Le fichier `index.html` du dépôt est la version à publier. Le fichier SQL sert à configurer la base une seule fois ; il ne contient aucun secret.
 
-Les prix du catalogue sont des relevés indicatifs chez Philibert au 4 novembre 2026. Ils peuvent évoluer ; le lien de chaque fiche permet de consulter le prix en vigueur. Les visuels s'affichent lorsque leur adresse d'image est disponible ; sinon une vignette de remplacement apparaît.
+Le catalogue de 30 kits a été relevé sur les fiches françaises de Warhammer.com le 4 novembre 2026 : noms français lorsqu'ils sont proposés, prix en euros, visuels officiels et liens directs vers les fiches. Les prix peuvent évoluer. Les descriptions sont de courts résumés en français. Le site affiche une vignette de remplacement si une image distante ne se charge pas.
