@@ -6,6 +6,8 @@ La version déployable est `index.html`. La page garde la sauvegarde locale et l
 
 Dans Supabase, ouvrez **SQL Editor**, collez le contenu de `supabase.sql`, puis exécutez-le. Les règles RLS limitent chaque compte à ses propres figurines.
 
+Pour installer le catalogue partagé de 30 kits Warhammer 40,000, ouvrez un nouvel onglet dans **SQL Editor**, collez `catalog-warhammer-40k.sql` et exécutez-le après le premier script. Il crée une table séparée, lisible par les comptes connectés et modifiable uniquement depuis le SQL Editor. Les figurines ajoutées depuis le catalogue sont copiées dans la collection privée de l'utilisateur.
+
 Dans **Authentication → Providers**, activez **Email**. Dans **Authentication → URL Configuration**, définissez **Site URL** et ajoutez dans **Redirect URLs** l'adresse exacte `https://baretclement.github.io/warhammer/`.
 
 ## 2. Configuration déjà renseignée
@@ -21,3 +23,5 @@ Avec le fournisseur e-mail intégré de Supabase, l'envoi est limité à 2 e-mai
 L'export JSON reste disponible hors connexion. Les modifications locales restent enregistrées et placées en attente si le réseau échoue ; elles sont renvoyées à la prochaine connexion ou modification. Les changements hors ligne sur une figurine passent avant sa version cloud lors de la reconnexion. Les suppressions restent aussi en attente hors ligne et sont propagées à la reconnexion.
 
 Le fichier `index.html` du dépôt est la version à publier. Le fichier SQL sert à configurer la base une seule fois ; il ne contient aucun secret.
+
+Les prix du catalogue sont des relevés indicatifs chez Philibert au 4 novembre 2026. Ils peuvent évoluer ; le lien de chaque fiche permet de consulter le prix en vigueur. Les visuels s'affichent lorsque leur adresse d'image est disponible ; sinon une vignette de remplacement apparaît.
