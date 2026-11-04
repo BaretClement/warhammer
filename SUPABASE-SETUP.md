@@ -6,7 +6,7 @@ La version déployable est `index.html`. La page garde la sauvegarde locale et l
 
 Dans Supabase, ouvrez **SQL Editor**, collez le contenu de `supabase.sql`, puis exécutez-le. Les règles RLS limitent chaque compte à ses propres figurines.
 
-Dans **Authentication → Providers**, activez **Email**. Les liens doivent renvoyer vers l'adresse GitHub Pages du site. Ajoutez cette adresse dans **Authentication → URL Configuration → Redirect URLs**, par exemple `https://baretclement.github.io/warhammer/`.
+Dans **Authentication → Providers**, activez **Email**. Dans **Authentication → URL Configuration**, définissez **Site URL** et ajoutez dans **Redirect URLs** l'adresse exacte `https://baretclement.github.io/warhammer/`.
 
 ## 2. Configuration déjà renseignée
 
