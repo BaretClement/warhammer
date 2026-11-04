@@ -6,7 +6,9 @@ La version déployable est `index.html`. La page garde la sauvegarde locale et l
 
 Dans Supabase, ouvrez **SQL Editor**, collez le contenu de `supabase.sql`, puis exécutez-le. Les règles RLS limitent chaque compte à ses propres figurines.
 
-Pour installer le catalogue partagé de 30 kits Warhammer 40,000, ouvrez un nouvel onglet dans **SQL Editor**, collez `catalog-warhammer-40k.sql` et exécutez-le après le premier script. Il crée une table séparée, lisible par les comptes connectés et modifiable uniquement depuis le SQL Editor. Les figurines ajoutées depuis le catalogue sont copiées dans la collection privée de l'utilisateur.
+Pour installer le catalogue partagé de 30 kits Warhammer 40,000, ouvrez un nouvel onglet dans **SQL Editor**, collez `catalog-warhammer-40k.sql` et exécutez-le après le premier script. Le catalogue est lisible par tous, même sans compte, et modifiable uniquement depuis le SQL Editor. Les collections personnelles restent privées et accessibles uniquement à leur propriétaire.
+
+Si `catalog-warhammer-40k.sql` a déjà été exécuté, exécutez aussi `supabase-catalog-public.sql` dans **SQL Editor** pour autoriser la lecture publique. Le bouton **Parcourir les figurines** affichera le catalogue sans connexion ; l’ajout à une wishlist demandera toujours de se connecter.
 
 Dans **Authentication → Providers**, activez **Email**. Dans **Authentication → URL Configuration**, définissez **Site URL** et ajoutez dans **Redirect URLs** l'adresse exacte `https://baretclement.github.io/warhammer/`.
 

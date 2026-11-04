@@ -15,10 +15,11 @@ create table if not exists public.catalog_items (
 
 alter table public.catalog_items enable row level security;
 drop policy if exists "Signed-in users read catalog" on public.catalog_items;
-create policy "Signed-in users read catalog" on public.catalog_items
-  for select to authenticated using (true);
-grant select on public.catalog_items to authenticated;
-revoke all on public.catalog_items from anon;
+drop policy if exists "Anyone reads public catalog" on public.catalog_items;
+create policy "Anyone reads public catalog" on public.catalog_items
+  for select to anon, authenticated using (true);
+revoke all on public.catalog_items from public, anon, authenticated;
+grant select on public.catalog_items to anon, authenticated;
 
 insert into public.catalog_items
 (id,universe,faction,name,description,price_eur,image_url,product_url,price_source,price_checked_at)
