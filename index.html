@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Warhammer Collection</title>
+<style>
+:root{--bg:#171916;--panel:#22251f;--panel2:#292d25;--line:#3b4035;--ink:#eee9dc;--muted:#aaa997;--gold:#c5a66a;--green:#73836a;--red:#9c6257}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+.shell{max-width:1180px;margin:auto;padding:28px 22px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid var(--line);padding-bottom:22px}
+.brand{display:flex;align-items:center;gap:14px}.sigil{width:44px;height:44px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;color:var(--gold);font-size:22px}
+.eyebrow{color:var(--gold);font-size:10px;letter-spacing:.22em;text-transform:uppercase}.brand h1{font:500 23px/1.1 Georgia,serif;letter-spacing:.04em;margin:3px 0}
+.sync{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:8px 11px;border-radius:30px;white-space:nowrap}.sync i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-right:7px}
+.hero{padding:36px 0 26px;display:flex;justify-content:space-between;align-items:end;gap:20px}.hero h2{font:500 clamp(28px,4vw,42px)/1.05 Georgia,serif;margin:7px 0 10px}.hero p{color:var(--muted);margin:0;max-width:560px}.actions{display:flex;gap:9px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:10px 15px;border-radius:5px}.btn.primary{background:var(--gold);border-color:var(--gold);color:#1b1b16;font-weight:650}.btn:hover{filter:brightness(1.12)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:8px 0 27px}.stat{background:var(--panel);border:1px solid var(--line);padding:17px 19px;border-radius:7px}.stat span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.12em}.stat strong{display:block;font:500 29px Georgia,serif;color:var(--gold);margin-top:4px}
+.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:13px}.tabs{display:flex;gap:5px}.tab{background:transparent;color:var(--muted);border:0;border-bottom:2px solid transparent;padding:11px 14px}.tab.active{color:var(--ink);border-color:var(--gold)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}.filters input,.filters select,.field input,.field select,.field textarea{background:#171a16;color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:10px 11px;min-width:0}.filters input{width:210px}.filters select{max-width:220px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px;padding-top:19px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:7px;overflow:hidden;min-width:0}.art{height:158px;background:linear-gradient(135deg,#34382f,#1a1d19);display:grid;place-items:center;color:#777d6c;position:relative;overflow:hidden}.art img{width:100%;height:100%;object-fit:cover}.art .placeholder{font:42px Georgia,serif;color:#a18b5f;opacity:.75}.pill{position:absolute;left:10px;top:10px;background:#171916df;border:1px solid #5a5c4e;color:#d7c59d;border-radius:3px;padding:4px 7px;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.cardbody{padding:13px 14px 14px}.universe{color:var(--gold);font-size:10px;letter-spacing:.12em;text-transform:uppercase}.card h3{font:500 18px/1.2 Georgia,serif;margin:5px 0 3px}.faction{font-size:12px;color:var(--muted);min-height:18px}.meta{display:flex;justify-content:space-between;align-items:center;margin-top:13px;padding-top:10px;border-top:1px solid var(--line);gap:8px}.status{font-size:11px;color:#c9c9b9}.cardactions{display:flex;gap:6px}.mini{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:5px 8px;font-size:11px}.empty{grid-column:1/-1;text-align:center;padding:55px 20px;color:var(--muted);border:1px dashed var(--line);border-radius:7px}.empty strong{display:block;color:var(--ink);font:20px Georgia,serif;margin-bottom:6px}
+.note{margin-top:30px;border:1px solid #65583b;background:#28251d;border-radius:6px;padding:14px 16px;color:#c9c1ad;font-size:12px}.note strong{color:var(--gold)}
+dialog{border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);width:min(540px,calc(100% - 28px));padding:0;box-shadow:0 24px 90px #000b}dialog::backdrop{background:#000a}.modalhead{padding:18px 21px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.modalhead h3{font:20px Georgia,serif;margin:0}.modalbody{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.field input,.field select,.field textarea{width:100%}.modalfoot{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}.danger{color:#d59b91}.hidden{display:none!important}
+@media(max-width:650px){.shell{padding:19px 14px 40px}header{align-items:flex-start}.sync{font-size:10px}.hero{display:block;padding-top:28px}.actions{margin-top:17px}.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:24px}.stat span{font-size:9px}.filters{width:100%}.filters input{flex:1;width:100%}.filters select{flex:1;max-width:none}.toolbar{align-items:stretch}.tabs{width:100%}.tab{flex:1;padding:10px 4px}.modalbody{grid-template-columns:1fr}.field.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+ <div class="brand"><div class="sigil">✠</div><div><div class="eyebrow">Registre personnel</div><h1>WARHAMMER COLLECTION</h1></div></div>
+ <div class="sync"><i></i> Synchronisation cloud à configurer</div>
+</header>
+<section class="hero">
+ <div><div class="eyebrow">Inventaire & convoitises</div><h2>Votre arsenal,<br>votre histoire.</h2><p>Un catalogue personnel pour suivre les figurines possédées, celles en cours de peinture et les prochaines pièces à rejoindre vos vitrines.</p></div>
+ <div class="actions"><button class="btn" id="exportBtn">Exporter</button><button class="btn primary" id="addBtn">＋ Ajouter une figurine</button></div>
+</section>
+<section class="stats">
+ <div class="stat"><span>Collection</span><strong id="ownedCount">0</strong></div>
+ <div class="stat"><span>Wishlist</span><strong id="wishCount">0</strong></div>
+ <div class="stat"><span>Budget souhaité</span><strong id="budget">0 €</strong></div>
+</section>
+<div class="toolbar">
+ <nav class="tabs"><button class="tab active" data-tab="owned">Ma collection</button><button class="tab" data-tab="wishlist">Wishlist</button><button class="tab" data-tab="all">Tout voir</button></nav>
+ <div class="filters"><input id="search" placeholder="Rechercher une figurine…"><select id="universe"><option value="">Tous les univers</option><option>Age of Sigmar</option><option>Seigneur des Anneaux</option><option>Warhammer 40K</option></select><select id="status"><option value="">Tous les statuts</option><option>À assembler</option><option>À peindre</option><option>En cours</option><option>Peinte</option><option>À acheter</option></select></div>
+</div>
+<main class="grid" id="grid"></main>
+<div class="note"><strong>Version 0.1 — Prototype.</strong> Les données sont enregistrées dans ce navigateur pour tester le catalogue. La connexion cloud multi-appareils sera activée après configuration de la base de données. Utilisez « Exporter » pour sauvegarder votre inventaire entre-temps.</div>
+</div>
+<dialog id="itemDialog">
+ <form id="itemForm">
+  <div class="modalhead"><h3 id="modalTitle">Ajouter une figurine</h3><button type="button" class="mini" id="closeModal">✕</button></div>
+  <div class="modalbody">
+   <div class="field full"><label>Nom de la figurine *</label><input name="name" required placeholder="Ex. : Archaon, le Seigneur de la Fin des Temps"></div>
+   <div class="field"><label>Univers</label><select name="universe"><option>Age of Sigmar</option><option>Seigneur des Anneaux</option><option>Warhammer 40K</option></select></div>
+   <div class="field"><label>Faction / armée</label><input name="faction" placeholder="Ex. : Légions de Nagash"></div>
+   <div class="field"><label>Statut</label><select name="status"><option>À assembler</option><option>À peindre</option><option>En cours</option><option>Peinte</option><option>À acheter</option></select></div>
+   <div class="field"><label>Prix (€)</label><input name="price" type="number" min="0" step="0.01" placeholder="0"></div>
+   <div class="field full"><label>Image (URL)</label><input name="image" type="url" placeholder="https://…"></div>
+   <div class="field full"><label>Notes personnelles</label><textarea name="notes" rows="2" placeholder="Édition, date d'achat, projet de peinture…"></textarea></div>
+  </div>
+  <div class="modalfoot"><button type="button" class="btn danger hidden" id="deleteBtn">Supprimer</button><div><button type="button" class="btn" id="cancelBtn">Annuler</button> <button class="btn primary" type="submit">Enregistrer</button></div></div>
+ </form>
+</dialog>
+<script>
+const KEY='warhammer_collection_v01';
+let items=JSON.parse(localStorage.getItem(KEY)||'[]'), tab='owned', editing=null;
+const $=s=>document.querySelector(s);
+function save(){localStorage.setItem(KEY,JSON.stringify(items));render()}
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function owned(x){return x.status!=='À acheter'}
+function render(){
+ $('#ownedCount').textContent=items.filter(owned).length;
+ $('#wishCount').textContent=items.filter(x=>!owned(x)).length;
+ const sum=items.filter(x=>!owned(x)).reduce((a,x)=>a+(Number(x.price)||0),0);
+ $('#budget').textContent=sum.toLocaleString('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+ const q=$('#search').value.toLowerCase(),u=$('#universe').value,s=$('#status').value;
+ let shown=items.filter(x=>(tab==='all'||(tab==='owned'?owned(x):!owned(x)))&&(!q||(x.name+' '+x.faction+' '+x.notes).toLowerCase().includes(q))&&(!u||x.universe===u)&&(!s||x.status===s));
+ $('#grid').innerHTML=shown.length?shown.map(x=>`<article class="card"><div class="art">${x.image?`<img src="${esc(x.image)}" alt="${esc(x.name)}" onerror="this.remove()">`:`<span class="placeholder">✠</span>`}<span class="pill">${esc(x.status)}</span></div><div class="cardbody"><div class="universe">${esc(x.universe)}</div><h3>${esc(x.name)}</h3><div class="faction">${esc(x.faction||'Faction non renseignée')}</div><div class="meta"><span class="status">${x.price?Number(x.price).toLocaleString('fr-FR',{style:'currency',currency:'EUR'}):'Prix non renseigné'}</span><div class="cardactions"><button class="mini" onclick="editItem('${x.id}')">Modifier</button></div></div></div></article>`).join(''):`<div class="empty"><strong>${items.length?'Aucun résultat':'Votre catalogue commence ici.'}</strong>${items.length?'Essayez de modifier vos filtres.':'Ajoutez votre première figurine pour constituer votre collection ou votre wishlist.'}</div>`;
+}
+function openModal(item=null){
+ editing=item?.id||null;const f=$('#itemForm');f.reset();$('#modalTitle').textContent=item?'Modifier la figurine':'Ajouter une figurine';$('#deleteBtn').classList.toggle('hidden',!item);
+ if(item) for(const k of ['name','universe','faction','status','price','image','notes']) f.elements[k].value=item[k]??'';
+ $('#itemDialog').showModal();
+}
+window.editItem=id=>openModal(items.find(x=>x.id===id));
+$('#addBtn').onclick=()=>openModal();$('#closeModal').onclick=$('#cancelBtn').onclick=()=>$('#itemDialog').close();
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t===b));render()});
+['search','universe','status'].forEach(id=>$('#'+id).addEventListener('input',render));
+$('#itemForm').onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));const obj={...d,price:Number(d.price)||0,id:editing||crypto.randomUUID()};if(editing)items=items.map(x=>x.id===editing?obj:x);else items.unshift(obj);save();$('#itemDialog').close()};
+$('#deleteBtn').onclick=()=>{if(editing&&confirm('Supprimer cette figurine du catalogue ?')){items=items.filter(x=>x.id!==editing);save();$('#itemDialog').close()}};
+$('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='warhammer-collection.json';a.click();URL.revokeObjectURL(a.href)};
+render();
+</script>
+</body></html>
