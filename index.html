@@ -23,14 +23,23 @@ header{display:flex;align-items:center;justify-content:space-between;gap:18px;bo
 .note{margin-top:30px;border:1px solid #65583b;background:#28251d;border-radius:6px;padding:14px 16px;color:#c9c1ad;font-size:12px}.note strong{color:var(--gold)}
 dialog{border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);width:min(540px,calc(100% - 28px));padding:0;box-shadow:0 24px 90px #000b}dialog::backdrop{background:#000a}.modalhead{padding:18px 21px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.modalhead h3{font:20px Georgia,serif;margin:0}.modalbody{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.field input,.field select,.field textarea{width:100%}.modalfoot{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}.danger{color:#d59b91}.hidden{display:none!important}
 @media(max-width:650px){.shell{padding:19px 14px 40px}header{align-items:flex-start}.sync{font-size:10px}.hero{display:block;padding-top:28px}.actions{margin-top:17px}.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:24px}.stat span{font-size:9px}.filters{width:100%}.filters input{flex:1;width:100%}.filters select{flex:1;max-width:none}.toolbar{align-items:stretch}.tabs{width:100%}.tab{flex:1;padding:10px 4px}.modalbody{grid-template-columns:1fr}.field.full{grid-column:auto}}
+
+.authbox{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:12px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-size:12px;color:var(--muted)}.authbox input{background:#171a16;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:7px 9px;min-width:190px}.authbox button{padding:7px 10px;font-size:12px}.authmsg{flex:1;min-width:180px}.authuser{color:var(--ink)}
+@media(max-width:650px){.authbox input{flex:1;min-width:130px}}
 </style>
 </head>
 <body>
 <div class="shell">
 <header>
  <div class="brand"><div class="sigil">✠</div><div><div class="eyebrow">Registre personnel</div><h1>WARHAMMER COLLECTION</h1></div></div>
- <div class="sync"><i></i> Synchronisation cloud à configurer</div>
+ <div class="sync"><i></i><span id="syncIndicator">Cloud à configurer</span></div>
 </header>
+<div class="authbox" id="authbox">
+ <span class="authuser" id="authuser">Connexion cloud non configurée</span>
+ <form id="loginForm" class="hidden"><input id="loginEmail" type="email" required autocomplete="email" placeholder="Votre adresse e-mail"><button class="btn" type="submit">Recevoir un lien</button></form>
+ <button class="btn hidden" id="logoutBtn" type="button">Déconnexion</button>
+ <span class="authmsg" id="authmsg" role="status">Les données restent enregistrées localement tant que Supabase n'est pas configuré.</span>
+</div>
 <section class="hero">
  <div><div class="eyebrow">Inventaire & convoitises</div><h2>Votre arsenal,<br>votre histoire.</h2><p>Un catalogue personnel pour suivre les figurines possédées, celles en cours de peinture et les prochaines pièces à rejoindre vos vitrines.</p></div>
  <div class="actions"><button class="btn" id="exportBtn">Exporter</button><button class="btn primary" id="addBtn">＋ Ajouter une figurine</button></div>
@@ -45,7 +54,7 @@ dialog{border:1px solid var(--line);border-radius:9px;background:var(--panel);co
  <div class="filters"><input id="search" placeholder="Rechercher une figurine…"><select id="universe"><option value="">Tous les univers</option><option>Age of Sigmar</option><option>Seigneur des Anneaux</option><option>Warhammer 40K</option></select><select id="status"><option value="">Tous les statuts</option><option>À assembler</option><option>À peindre</option><option>En cours</option><option>Peinte</option><option>À acheter</option></select></div>
 </div>
 <main class="grid" id="grid"></main>
-<div class="note"><strong>Version 0.1 — Prototype.</strong> Les données sont enregistrées dans ce navigateur pour tester le catalogue. La connexion cloud multi-appareils sera activée après configuration de la base de données. Utilisez « Exporter » pour sauvegarder votre inventaire entre-temps.</div>
+<div class="note"><strong>Synchronisation.</strong> La collection est conservée sur cet appareil et peut être exportée à tout moment. Connectez-vous avec la même adresse e-mail sur chacun de vos appareils pour synchroniser votre collection privée.</div>
 </div>
 <dialog id="itemDialog">
  <form id="itemForm">
@@ -62,11 +71,25 @@ dialog{border:1px solid var(--line);border-radius:9px;background:var(--panel);co
   <div class="modalfoot"><button type="button" class="btn danger hidden" id="deleteBtn">Supprimer</button><div><button type="button" class="btn" id="cancelBtn">Annuler</button> <button class="btn primary" type="submit">Enregistrer</button></div></div>
  </form>
 </dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// Configuration publique du projet Supabase (jamais la clé service_role).
+const SUPABASE_URL='https://olyelylmqzkbrfdyzkdl.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_u-b0ndOepZBfotltwfpYkw_Vc4uQJQ5';
+const CLOUD_TABLE='collection_items';
+const cloudConfigured=SUPABASE_URL.startsWith('https://')&&!SUPABASE_URL.includes('VOTRE-PROJET')&&!SUPABASE_PUBLISHABLE_KEY.includes('VOTRE_CLE');
+const supabaseClient=cloudConfigured?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
 const KEY='warhammer_collection_v01';
+const PENDING_KEY='warhammer_collection_pending_v01';
+function getPending(){try{return JSON.parse(localStorage.getItem(PENDING_KEY)||'{"upserts":{},"deletes":[]}')}catch{return {upserts:{},deletes:[]}}}
+function putPending(pending){localStorage.setItem(PENDING_KEY,JSON.stringify(pending))}
 let items=JSON.parse(localStorage.getItem(KEY)||'[]'), tab='owned', editing=null;
 const $=s=>document.querySelector(s);
-function save(){localStorage.setItem(KEY,JSON.stringify(items));render()}
+function setCloudMessage(message){$('#authmsg').textContent=message}
+function save(changedItem){localStorage.setItem(KEY,JSON.stringify(items));if(changedItem){const pending=getPending();pending.upserts[changedItem.id]=changedItem;pending.deletes=pending.deletes.filter(id=>id!==changedItem.id);putPending(pending)}render();if(supabaseClient&&changedItem)syncUpsert(changedItem)}
+async function syncUpsert(item){const {data:{session}}=await supabaseClient.auth.getSession();if(!session)return;const {error}=await supabaseClient.from(CLOUD_TABLE).upsert({id:item.id,user_id:session.user.id,item,deleted:false},{onConflict:'user_id,id'});if(error){setCloudMessage('Enregistrement local effectué ; synchronisation en attente : '+error.message);return}const pending=getPending();delete pending.upserts[item.id];putPending(pending);setCloudMessage('Synchronisé avec Supabase. Les données sont liées à '+session.user.email+'.')}
+async function syncFromCloud(user){setCloudMessage('Synchronisation de la collection…');const {data:rows,error}=await supabaseClient.from(CLOUD_TABLE).select('id,item,deleted').eq('user_id',user.id);if(error){setCloudMessage('Connexion établie, mais lecture cloud impossible : '+error.message);return}const cloudRows=rows||[];const pending=getPending();const tombstones=new Set([...cloudRows.filter(row=>row.deleted).map(row=>row.id),...pending.deletes]);const activeRows=cloudRows.filter(row=>!row.deleted&&row.item);const merged=[...activeRows.map(row=>row.item),...items.filter(item=>!cloudRows.some(row=>row.id===item.id))].filter(item=>!tombstones.has(item.id));for(const item of Object.values(pending.upserts)){const at=merged.findIndex(existing=>existing.id===item.id);if(at<0)merged.push(item);else merged[at]=item}items=merged;localStorage.setItem(KEY,JSON.stringify(items));render();const idsToUpsert=new Set([...items.filter(item=>!cloudRows.some(row=>row.id===item.id)).map(item=>item.id),...Object.keys(pending.upserts)]);const outgoing=items.filter(item=>idsToUpsert.has(item.id)).map(item=>({id:item.id,user_id:user.id,item,deleted:false}));const deletedRows=pending.deletes.map(id=>({id,user_id:user.id,item:null,deleted:true}));const outgoingRows=[...outgoing,...deletedRows];if(outgoingRows.length){const {error:upsertError}=await supabaseClient.from(CLOUD_TABLE).upsert(outgoingRows,{onConflict:'user_id,id'});if(upsertError){setCloudMessage('Données combinées localement, envoi cloud à reprendre : '+upsertError.message);return}}putPending({upserts:{},deletes:[]});setCloudMessage(items.length+' figurine(s) synchronisée(s) pour '+user.email+'.')}
+async function updateAuthUI(session){if(!supabaseClient){$('#syncIndicator').textContent='Cloud à configurer';$('#authuser').textContent='Connexion cloud non configurée';$('#loginForm').classList.add('hidden');$('#logoutBtn').classList.add('hidden');setCloudMessage('Renseignez l’URL du projet et sa clé publishable dans index.html.');return}if(session){$('#syncIndicator').textContent='Cloud connecté';$('#authuser').textContent='Connecté : '+session.user.email;$('#loginForm').classList.add('hidden');$('#logoutBtn').classList.remove('hidden');await syncFromCloud(session.user)}else{$('#syncIndicator').textContent='Données locales';$('#authuser').textContent='Non connecté';$('#loginForm').classList.remove('hidden');$('#logoutBtn').classList.add('hidden');setCloudMessage('Connectez-vous avec le même e-mail sur vos appareils. La collection locale est conservée.') }}
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function owned(x){return x.status!=='À acheter'}
 function render(){
@@ -87,9 +110,12 @@ window.editItem=id=>openModal(items.find(x=>x.id===id));
 $('#addBtn').onclick=()=>openModal();$('#closeModal').onclick=$('#cancelBtn').onclick=()=>$('#itemDialog').close();
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t===b));render()});
 ['search','universe','status'].forEach(id=>$('#'+id).addEventListener('input',render));
-$('#itemForm').onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));const obj={...d,price:Number(d.price)||0,id:editing||crypto.randomUUID()};if(editing)items=items.map(x=>x.id===editing?obj:x);else items.unshift(obj);save();$('#itemDialog').close()};
-$('#deleteBtn').onclick=()=>{if(editing&&confirm('Supprimer cette figurine du catalogue ?')){items=items.filter(x=>x.id!==editing);save();$('#itemDialog').close()}};
+$('#itemForm').onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));const obj={...d,price:Number(d.price)||0,id:editing||crypto.randomUUID()};if(editing)items=items.map(x=>x.id===editing?obj:x);else items.unshift(obj);save(obj);$('#itemDialog').close()};
+$('#deleteBtn').onclick=async()=>{if(editing&&confirm('Supprimer cette figurine du catalogue ?')){const id=editing;items=items.filter(x=>x.id!==id);localStorage.setItem(KEY,JSON.stringify(items));const pending=getPending();delete pending.upserts[id];if(!pending.deletes.includes(id))pending.deletes.push(id);putPending(pending);render();$('#itemDialog').close();const {data:{session}}=supabaseClient?await supabaseClient.auth.getSession():{data:{session:null}};if(session){const {error}=await supabaseClient.from(CLOUD_TABLE).upsert({id,user_id:session.user.id,item:null,deleted:true},{onConflict:'user_id,id'});if(!error){const latest=getPending();latest.deletes=latest.deletes.filter(value=>value!==id);putPending(latest)}setCloudMessage(error?'Suppression locale faite ; suppression cloud en attente : '+error.message:'Figurine supprimée et synchronisée.')}}};
 $('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='warhammer-collection.json';a.click();URL.revokeObjectURL(a.href)};
 render();
+$('#loginForm').onsubmit=async event=>{event.preventDefault();const email=$('#loginEmail').value.trim();setCloudMessage('Envoi du lien de connexion…');const {error}=await supabaseClient.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});setCloudMessage(error?'Envoi impossible : '+error.message:'Lien envoyé. Ouvrez le message reçu sur cet appareil pour vous connecter.')};
+$('#logoutBtn').onclick=async()=>{await supabaseClient.auth.signOut();setCloudMessage('Déconnecté. La collection de cet appareil reste disponible.')};
+if(supabaseClient){supabaseClient.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>updateAuthUI(session),0)});supabaseClient.auth.getSession().then(({data:{session}})=>updateAuthUI(session));window.addEventListener('online',async()=>{const {data:{session}}=await supabaseClient.auth.getSession();if(session)syncFromCloud(session.user)})}else updateAuthUI(null);
 </script>
 </body></html>
