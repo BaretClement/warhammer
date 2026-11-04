@@ -14,7 +14,9 @@ Le `Project URL` et la clé publique **Publishable** ont été ajoutés à `inde
 
 ## 3. Publier et connecter les appareils
 
-Publiez `index.html` à la racine de la branche GitHub Pages, avec `supabase.sql` conservé à part pour référence. Sur le site, saisissez votre e-mail et ouvrez le lien de connexion reçu. Connectez-vous avec le même compte sur chaque appareil. À la première connexion, les lignes cloud et la sauvegarde locale sont réunies ; les figurines locales absentes du cloud sont envoyées. Une même figurine présente aux deux endroits prend la version cloud.
+Publiez `index.html` à la racine de la branche GitHub Pages, avec `supabase.sql` conservé à part pour référence. Pour la première connexion, saisissez votre e-mail et demandez un lien de connexion. Une fois connecté, définissez un mot de passe dans le formulaire affiché. Les connexions suivantes peuvent se faire directement avec e-mail et mot de passe ; le lien e-mail reste disponible. Utilisez le même compte sur chaque appareil. À la première connexion, les lignes cloud et la sauvegarde locale sont réunies ; les figurines locales absentes du cloud sont envoyées. Une même figurine présente aux deux endroits prend la version cloud.
+
+Avec le fournisseur e-mail intégré de Supabase, l'envoi est limité à 2 e-mails par heure pour tout le projet. Si cette limite ne suffit pas, configurez un serveur SMTP personnalisé dans Supabase. Voir la [documentation SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
 
 L'export JSON reste disponible hors connexion. Les modifications locales restent enregistrées et placées en attente si le réseau échoue ; elles sont renvoyées à la prochaine connexion ou modification. Les changements hors ligne sur une figurine passent avant sa version cloud lors de la reconnexion. Les suppressions restent aussi en attente hors ligne et sont propagées à la reconnexion.
 
