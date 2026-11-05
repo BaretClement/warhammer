@@ -28,6 +28,7 @@ dialog{border:1px solid var(--line);border-radius:9px;background:var(--panel);co
 
 .authbox{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:12px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-size:12px;color:var(--muted)}.authbox input{background:#171a16;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:7px 9px;min-width:190px}.authbox form{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.authbox button{padding:7px 10px;font-size:12px}.authmsg{flex:1;min-width:180px}.authuser{color:var(--ink)}
 @media(max-width:650px){.authbox input{flex:1;min-width:130px}}
+.catalog-navigation{display:grid;gap:10px;margin-top:18px}.catalog-level{display:flex;flex-wrap:wrap;gap:8px}.taxonomy-button{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:46px;min-width:145px;padding:9px 14px;border:1px solid;border-radius:5px;text-align:left;font-weight:650;transition:background .15s,border-color .15s,transform .15s}.taxonomy-button:hover{transform:translateY(-1px)}.taxonomy-button .tax-count{font-size:11px;opacity:.72;white-space:nowrap}.taxonomy-button.top-level{flex:1 1 180px;background:#090a09;border-color:#484a45;color:var(--ink);font:500 18px Georgia,serif}.taxonomy-button.top-level.is-active{background:#27261f;border-color:var(--gold);color:#f1d899}.taxonomy-button.army-level{flex:1 1 170px;background:#321a1a;border-color:#87433e;color:#f2c3bd}.taxonomy-button.army-level.is-active{background:#762e28;border-color:#d27368;color:#fff0ed}.taxonomy-button.faction-level{flex:1 1 145px;background:#1b2c20;border-color:#527653;color:#c5e2c5}.taxonomy-button.faction-level.is-active{background:#355b39;border-color:#83b987;color:#fff}.catalog-selection-hint{margin:2px 0 0;color:var(--muted);font-size:13px}.catalog-navigation+.empty,.catalog-navigation+.grid{margin-top:8px}
 </style>
 </head>
 <body>
@@ -57,7 +58,7 @@ dialog{border:1px solid var(--line);border-radius:9px;background:var(--panel);co
  <nav class="tabs" aria-label="Vues des figurines"><button class="tab active" data-tab="catalog">Catalogue</button><button class="tab" data-tab="owned">Ma collection</button><button class="tab" data-tab="wishlist">Wishlist</button></nav>
 <div class="filters"><input id="search" placeholder="Rechercher une figurine…"><select id="universe"><option value="">Tous les univers</option></select><select id="sortBy" aria-label="Trier les figurines"><option value="name">Ordre alphabétique</option><option value="price-asc">Prix croissant</option><option value="price-desc">Prix décroissant</option></select><select id="status"><option value="">Tous les statuts</option><option>À peindre</option><option>Peinte</option><option>À acheter</option></select><select id="ownedStatusFilter" class="hidden" aria-label="Filtrer Ma collection par état"><option value="">Tous les états</option><option>À peindre</option><option>Peinte</option></select></div>
 </div>
-<section id="catalogSection"><div class="catalogbar"><p>Catalogue partagé 40K · les prix peuvent évoluer; consultez la fiche Warhammer pour le tarif à jour.</p></div><div class="grid" id="catalogGrid"></div></section>
+<section id="catalogSection"><div class="catalogbar"><p>Catalogue partagé · choisissez un univers, puis une armée et une faction.</p></div><div class="catalog-navigation" id="catalogNavigation" aria-live="polite"></div><div id="catalogGrid"></div></section>
 <main class="grid" id="grid"></main>
 <div class="note"><strong>Synchronisation.</strong> La collection est conservée sur cet appareil et peut être exportée à tout moment. Connectez-vous avec la même adresse e-mail sur chacun de vos appareils pour synchroniser votre collection privée.</div>
 </div>
@@ -93,6 +94,7 @@ function putPending(pending){localStorage.setItem(PENDING_KEY,JSON.stringify(pen
 function normalizeItemStatus(item){let normalized=['À assembler','En cours'].includes(item.status)?{...item,status:'À peindre'}:item;if(!['À peindre','Peinte'].includes(normalized.status)&&normalized.rating!==undefined){normalized={...normalized};delete normalized.rating}return normalized}
 const storedItems=JSON.parse(localStorage.getItem(KEY)||'[]');
 let items=storedItems.map(normalizeItemStatus), tab='catalog', editing=null, catalogLoaded=false, catalogLoading=false;
+let catalogNav={universe:'',division:'',category:'',faction:''};
 if(items.some((item,index)=>item.status!==storedItems[index].status||item.rating!==storedItems[index].rating)){localStorage.setItem(KEY,JSON.stringify(items));const pending=getPending();items.forEach((item,index)=>{if(item.status!==storedItems[index].status||item.rating!==storedItems[index].rating)pending.upserts[item.id]=item});putPending(pending)}
 const $=s=>document.querySelector(s);
 function setCloudMessage(message){$('#authmsg').textContent=message}
@@ -121,7 +123,7 @@ function render(){
  if(catalogLoaded&&window.catalogRows)renderCatalog(visibleCatalogRows());
 }
 function catalogItem(x){return items.find(item=>item.catalog_id===x.id)}
-function visibleCatalogRows(){const q=$('#search').value.trim().toLowerCase(),u=$('#universe').value,s=$('#status').value;return sortRows((window.catalogRows||[]).filter(x=>{const item=catalogItem(x);return(!q||(`${x.name} ${x.faction} ${catalogDivision(x)||''} ${x.description||''}`).toLowerCase().includes(q))&&(!u||x.universe===u)&&(!s||(s==='À acheter'?item&&wishlisted(item):item&&item.status===s))}))}
+function visibleCatalogRows(){const q=$('#search').value.trim().toLowerCase(),u=tab==='catalog'?'':$('#universe').value,s=$('#status').value;return sortRows((window.catalogRows||[]).filter(x=>{const item=catalogItem(x);return(!q||(`${x.name} ${x.faction} ${catalogDivision(x)||''} ${x.description||''}`).toLowerCase().includes(q))&&(!u||x.universe===u)&&(!s||(s==='À acheter'?item&&wishlisted(item):item&&item.status===s))}))}
 const ARMY_CATEGORIES={
  'Space Marines':['Black Templars','Blood Angels','Dark Angels','Deathwatch','Grey Knights','Imperial Fists','Iron Hands','Raven Guard','Salamanders','Space Marines','Space Wolves','Ultramarines','White Scars'],
  'Armées de l’Imperium':['Adepta Sororitas','Adeptus Custodes','Adeptus Mechanicus','Astra Militarum','Imperial Agents','Imperial Knights'],
@@ -135,38 +137,53 @@ function catalogDivision(product){
  if(product.army_group&&ARMY_CATEGORIES[product.army_group])return product.army_group;
  return Object.entries(ARMY_CATEGORIES).find(([,factions])=>factions.includes(faction))?.[0]||product.army_group||'';
 }
+function catalogNavButton(level,key,label,count,tone,active){return`<button type="button" class="taxonomy-button ${tone}${active?' is-active':''}" data-catalog-level="${level}" data-key="${esc(encodeURIComponent(key))}" aria-pressed="${active}"><span>${esc(label)}</span><span class="tax-count">${Number(count||0).toLocaleString('fr-FR')}</span></button>`}
+function renderCatalogProducts(products){return products.length?`<div class="grid army-grid">${products.map(x=>{const item=catalogItem(x),isOwned=!!item&&owned(item),isWishlisted=!!item&&wishlisted(item);return`<article class="card catalog-card ${isOwned?'is-owned':isWishlisted?'is-wishlisted':''}"><div class="art">${x.image_url?`<img src="${esc(x.image_url)}" alt="${esc(x.name)}" onerror="this.remove()">`:`<span class="placeholder">✠</span>`}<div class="art-labels"><span class="pill">${esc(catalogFaction(x.faction||'Autres'))}</span>${isOwned?'<span class="collection-mark is-owned">✓ Possédée</span>':isWishlisted?'<span class="collection-mark is-wishlisted">♥ Wishlist</span>':''}</div></div><div class="cardbody"><div class="universe">${esc(x.universe)}</div>${productTitle(x)}<div class="faction">${esc(x.description||'')}</div>${isOwned?ratingControl(item):''}<div class="meta"><span class="status">${Number(x.price_eur||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'})}</span><div class="cardactions"><button class="mini iconbutton wish-icon ${isWishlisted?'is-active':''}" onclick="addCatalogItem('${esc(x.id)}','À acheter')" aria-label="${isWishlisted?'Retirer':'Ajouter'} ${esc(x.name)} ${isWishlisted?'de la':'à la'} wishlist" aria-pressed="${isWishlisted}" title="${isWishlisted?'Retirer de':'Ajouter à'} la wishlist"><svg viewBox="0 0 24 24" fill="${isWishlisted?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg></button><button class="mini iconbutton owned-icon ${isOwned?'is-active':''}" onclick="addCatalogItem('${esc(x.id)}','À peindre')" aria-label="${isOwned?'Retirer':'Ajouter'} ${esc(x.name)} ${isOwned?'de':'à'} Ma collection" aria-pressed="${isOwned}" title="${isOwned?'Retirer de':'Ajouter à'} Ma collection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div></div></article>`}).join('')}</div>`:`<div class="empty"><strong>Aucune figurine à afficher</strong>Essayez d’ajuster les filtres de recherche ou de statut.</div>`}
 function renderCatalog(rows){
- const openGroups=new Set([...$('#catalogGrid').querySelectorAll('details[open]')].map(node=>node.dataset.group));
- const universes=new Map();
- for(const product of rows){
+ const source=window.catalogRows||rows,trees=new Map(),universeCounts=new Map();
+ for(const product of source){
   const universe=product.universe||'Univers non renseigné';
-  if(!universes.has(universe))universes.set(universe,new Map());
-  const divisions=universes.get(universe),division=catalogDivision(product),key=division||'';
-  if(!divisions.has(key))divisions.set(key,new Map());
-  const factions=divisions.get(key),faction=catalogFaction(product.faction||'Autres');
-  if(!factions.has(faction))factions.set(faction,[]);
-  factions.get(faction).push(product);
+  universeCounts.set(universe,(universeCounts.get(universe)||0)+1);
+  if(!trees.has(universe))trees.set(universe,new Map());
+  const divisions=trees.get(universe),division=universe==='Warhammer 40,000'?(catalogDivision(product)||'Autres armées'):'';
+  if(!divisions.has(division))divisions.set(division,new Map());
+  const groups=divisions.get(division),faction=catalogFaction(product.faction||'Autres');
+  if(!groups.has(faction))groups.set(faction,[]);
+  groups.get(faction).push(product);
  }
- if(universes.has('Warhammer 40,000')){
-  const divisions=universes.get('Warhammer 40,000'),orderedDivisions=new Map();
-  for(const [division,armies] of Object.entries(ARMY_CATEGORIES)){
-   const factions=divisions.get(division)||new Map();
-   for(const army of armies)if(!factions.has(army))factions.set(army,[]);
-   orderedDivisions.set(division,new Map([...factions.entries()].sort(([a],[b])=>a.localeCompare(b,'fr',{sensitivity:'base'}))));
-  }
-  for(const [division,factions] of divisions)if(!orderedDivisions.has(division))orderedDivisions.set(division,new Map([...factions.entries()].sort(([a],[b])=>a.localeCompare(b,'fr',{sensitivity:'base'}))));
-  universes.set('Warhammer 40,000',orderedDivisions);
+ const universeOrder=['Warhammer 40,000','Age of Sigmar','Seigneur des Anneaux'];
+ const universeNames=[...universeOrder.filter(name=>trees.has(name)),...([...trees.keys()].filter(name=>!universeOrder.includes(name)).sort((a,b)=>a.localeCompare(b,'fr',{sensitivity:'base'})))];
+ if(catalogNav.universe&&!trees.has(catalogNav.universe))catalogNav={universe:'',division:'',category:'',faction:''};
+ const universeLabels={'Warhammer 40,000':'Warhammer 40K','Age of Sigmar':'Age of Sigmar','Seigneur des Anneaux':'Middle-earth'};
+ const topButtons=universeNames.map(name=>catalogNavButton('universe',name,universeLabels[name]||name,universeCounts.get(name),'top-level',catalogNav.universe===name)).join('');
+ $('#catalogNavigation').innerHTML=`<div class="catalog-level universe-level" role="group" aria-label="Choisir un univers">${topButtons}</div>`;
+ $('#catalogGrid').innerHTML='';
+ if(!catalogNav.universe)return;
+ const selectedUniverse=catalogNav.universe,divisions=trees.get(selectedUniverse)||new Map(),visible=rows.filter(item=>(item.universe||'Univers non renseigné')===selectedUniverse);
+ if(selectedUniverse==='Warhammer 40,000'){
+  const divisionNames=[...Object.keys(ARMY_CATEGORIES),...([...divisions.keys()].filter(name=>name&&!Object.prototype.hasOwnProperty.call(ARMY_CATEGORIES,name)).sort((a,b)=>a.localeCompare(b,'fr',{sensitivity:'base'})))];
+  const divisionCount=name=>[...(divisions.get(name)||new Map()).values()].reduce((count,products)=>count+products.length,0);
+  const armyButtons=divisionNames.map(name=>catalogNavButton('division',name,name,divisionCount(name),'army-level',catalogNav.division===name)).join('');
+  $('#catalogNavigation').insertAdjacentHTML('beforeend',`<div class="catalog-level army-level-row" role="group" aria-label="Choisir une armée">${armyButtons}</div>`);
+  if(!divisionNames.includes(catalogNav.division)){catalogNav.division='';catalogNav.faction=''}
+  if(!catalogNav.division){$('#catalogGrid').innerHTML='<p class="catalog-selection-hint">Choisissez une armée pour afficher ses factions.</p>';return}
+  const factionGroups=divisions.get(catalogNav.division)||new Map(),knownFactions=ARMY_CATEGORIES[catalogNav.division]||[];
+  const factionNames=[...new Set([...knownFactions,...factionGroups.keys()])].sort((a,b)=>a.localeCompare(b,'fr',{sensitivity:'base'}));
+  const factionCount=name=>(factionGroups.get(name)||[]).length;
+  const factionButtons=factionNames.map(name=>catalogNavButton('faction',name,name,factionCount(name),'faction-level',catalogNav.faction===name)).join('');
+  $('#catalogNavigation').insertAdjacentHTML('beforeend',`<div class="catalog-level faction-level-row" role="group" aria-label="Choisir une faction">${factionButtons}</div>`);
+  if(!factionNames.includes(catalogNav.faction)){catalogNav.faction='';$('#catalogGrid').innerHTML='<p class="catalog-selection-hint">Choisissez une faction pour afficher ses figurines.</p>';return}
+  const products=visible.filter(item=>catalogDivision(item)===catalogNav.division&&catalogFaction(item.faction||'Autres')===catalogNav.faction);
+  $('#catalogGrid').innerHTML=renderCatalogProducts(products);
+  return;
  }
- if(universes.has('Seigneur des Anneaux')){
-  const divisions=universes.get('Seigneur des Anneaux'),factions=divisions.get('')||new Map(),orderedFactions=new Map();
-  const order=['The Lord of the Rings™ - Good','The Lord of the Rings™ - Evil','Le Hobbit™ - Bien','Le Hobbit™ - Mal','The War of the Rohirrim™ - Bien','The War of the Rohirrim™ - Mal','Décors et terrains'];
-  for(const category of order)if(factions.has(category))orderedFactions.set(category,factions.get(category));
-  for(const [category,products] of factions)if(!orderedFactions.has(category))orderedFactions.set(category,products);
-  divisions.set('',orderedFactions);
- }
- const renderFaction=(universe,faction,products)=>`<details class="army-group" data-group="f:${esc(universe)}/${esc(faction)}" ${openGroups.has(`f:${universe}/${faction}`)?'open':''}><summary><span>${esc(faction)}</span><span class="faction-count">${products.length} figurine${products.length===1?'':'s'}</span></summary>${products.length?`<div class="grid army-grid">${products.map(x=>{const item=catalogItem(x),isOwned=!!item&&owned(item),isWishlisted=!!item&&wishlisted(item);return`<article class="card catalog-card ${isOwned?'is-owned':isWishlisted?'is-wishlisted':''}"><div class="art">${x.image_url?`<img src="${esc(x.image_url)}" alt="${esc(x.name)}" onerror="this.remove()">`:`<span class="placeholder">✠</span>`}<div class="art-labels"><span class="pill">${esc(faction)}</span>${isOwned?'<span class="collection-mark is-owned">✓ Possédée</span>':isWishlisted?'<span class="collection-mark is-wishlisted">♥ Wishlist</span>':''}</div></div><div class="cardbody"><div class="universe">${esc(universe)}</div>${productTitle(x)}<div class="faction">${esc(x.description||'')}</div>${isOwned?ratingControl(item):''}<div class="meta"><span class="status">${Number(x.price_eur||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'})}</span><div class="cardactions"><button class="mini iconbutton wish-icon ${isWishlisted?'is-active':''}" onclick="addCatalogItem('${esc(x.id)}','À acheter')" aria-label="${isWishlisted?'Retirer':'Ajouter'} ${esc(x.name)} ${isWishlisted?'de la':'à la'} wishlist" aria-pressed="${isWishlisted}" title="${isWishlisted?'Retirer de':'Ajouter à'} la wishlist"><svg viewBox="0 0 24 24" fill="${isWishlisted?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg></button><button class="mini iconbutton owned-icon ${isOwned?'is-active':''}" onclick="addCatalogItem('${esc(x.id)}','À peindre')" aria-label="${isOwned?'Retirer':'Ajouter'} ${esc(x.name)} ${isOwned?'de':'à'} Ma collection" aria-pressed="${isOwned}" title="${isOwned?'Retirer de':'Ajouter à'} Ma collection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div></div></article>`}).join('')}</div>`:'<div class="army-empty">Aucune figurine dans cette armée pour l’instant.</div>'}</details>`;
- const renderDivision=(universe,division,factions)=>`<details class="faction-group" data-group="d:${esc(universe)}/${esc(division)}" ${openGroups.has(`d:${universe}/${division}`)?'open':''}><summary><span>${esc(division)}</span><span class="faction-count">${[...factions.values()].reduce((n,products)=>n+products.length,0)} figurine(s)</span></summary>${[...factions.entries()].map(([faction,products])=>renderFaction(universe,faction,products)).join('')}</details>`;
- $('#catalogGrid').innerHTML=rows.length?[...universes.entries()].map(([universe,divisions])=>`<details class="universe-group" data-group="u:${esc(universe)}" ${openGroups.has(`u:${universe}`)?'open':''}><summary><span>${esc(universe)}</span><span class="faction-count">${[...divisions.values()].reduce((n,factions)=>n+[...factions.values()].reduce((m,products)=>m+products.length,0),0)} figurine(s)</span></summary>${[...divisions.entries()].map(([division,factions])=>division?renderDivision(universe,division,factions):[...factions.entries()].map(([faction,products])=>renderFaction(universe,faction,products)).join('')).join('')}</details>`).join(''):`<div class="empty"><strong>${window.catalogRows?.length?'Aucun résultat':'Catalogue vide'}</strong>${window.catalogRows?.length?'Essayez de modifier vos filtres.':'Les figurines apparaîtront ici dès qu’elles auront été ajoutées dans Supabase.'}</div>`;
+ const groups=divisions.get('')||new Map(),middleEarthOrder=['The Lord of the Rings™ - Good','The Lord of the Rings™ - Evil','Le Hobbit™ - Bien','Le Hobbit™ - Mal','The War of the Rohirrim™ - Bien','The War of the Rohirrim™ - Mal','Décors et terrains'];
+ const categories=[...groups.keys()].sort((a,b)=>{const ai=middleEarthOrder.indexOf(a),bi=middleEarthOrder.indexOf(b);if(ai>=0||bi>=0)return(ai<0?999:ai)-(bi<0?999:bi);return a.localeCompare(b,'fr',{sensitivity:'base'})});
+ const categoryButtons=categories.map(name=>catalogNavButton('category',name,name,(groups.get(name)||[]).length,'army-level',catalogNav.category===name)).join('');
+ $('#catalogNavigation').insertAdjacentHTML('beforeend',`<div class="catalog-level army-level-row" role="group" aria-label="Choisir une armée ou une catégorie">${categoryButtons}</div>`);
+ if(!categories.includes(catalogNav.category)){catalogNav.category='';$('#catalogGrid').innerHTML='<p class="catalog-selection-hint">Choisissez une armée ou une catégorie pour afficher les figurines.</p>';return}
+ const products=visible.filter(item=>catalogFaction(item.faction||'Autres')===catalogNav.category);
+ $('#catalogGrid').innerHTML=renderCatalogProducts(products);
 }
 async function loadCatalog(){if(catalogLoaded||catalogLoading)return;if(!supabaseClient){setCloudMessage('Le catalogue partagé n’est pas configuré.');return}catalogLoading=true;$('#catalogGrid').innerHTML='<div class="empty">Chargement du catalogue…</div>';let data=[],error=null;for(let from=0;;from+=1000){const result=await supabaseClient.from(CATALOG_TABLE).select('*').order('universe').order('faction').order('name').range(from,from+999);if(result.error){error=result.error;break}const page=result.data||[];data.push(...page);if(page.length<1000)break}catalogLoading=false;if(error){$('#catalogGrid').innerHTML='<div class="empty"><strong>Catalogue indisponible</strong>Vérifiez que le catalogue est installé dans Supabase et que sa lecture publique est activée.</div>';setCloudMessage('Lecture du catalogue impossible : '+error.message);return}window.catalogRows=data;const selected=$('#universe').value,options=[...new Set(data.map(item=>item.universe).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));$('#universe').innerHTML='<option value="">Tous les univers</option>'+options.map(value=>`<option value="${esc(value)}">${esc(value)}</option>`).join('');$('#universe').value=options.includes(selected)?selected:'';catalogLoaded=true;renderCatalog(visibleCatalogRows())}
 window.addCatalogItem=async(id,status='À acheter')=>{const x=window.catalogRows?.find(row=>row.id===id);if(!x)return;const {data:{session}}=await supabaseClient.auth.getSession();if(!session){setCloudMessage('Vous pouvez consulter le catalogue sans compte. Connectez-vous pour classer une figurine dans votre collection ou votre wishlist.');$('#loginEmail').focus();return}let item=catalogItem(x);if(item){const active=status==='À acheter'?wishlisted(item):owned(item);if(active){item.status='Non classée';delete item.rating;save(item);setCloudMessage(status==='À acheter'?'Figurine retirée de votre wishlist.':'Figurine retirée de Ma collection.');return}item.status=status;save(item);setCloudMessage(status==='À acheter'?'Figurine déplacée dans votre wishlist.':'Figurine ajoutée à Ma collection.');return}item={id:crypto.randomUUID(),name:x.name,universe:x.universe||'Univers non renseigné',faction:x.faction,status,price:Number(x.price_eur)||0,image:x.image_url||'',description:x.description||'',notes:'',catalog_id:x.id,product_url:x.product_url};items.unshift(item);save(item);setCloudMessage(status==='À acheter'?'Ajouté à votre wishlist.':'Ajouté à Ma collection.')}
@@ -177,9 +194,10 @@ function openModal(item=null){
 }
 window.editItem=id=>openModal(items.find(x=>x.id===id));
 $('#addBtn').onclick=()=>openModal();$('#closeModal').onclick=$('#cancelBtn').onclick=()=>$('#itemDialog').close();
-function selectTab(next){tab=next;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));const catalog=tab==='catalog';$('#catalogSection').classList.toggle('hidden',!catalog);$('#grid').classList.toggle('hidden',catalog);$('#status').classList.toggle('hidden',tab==='owned');$('#ownedStatusFilter').classList.toggle('hidden',tab!=='owned');if(catalog)loadCatalog();else render()}
+function selectTab(next){tab=next;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));const catalog=tab==='catalog';$('#catalogSection').classList.toggle('hidden',!catalog);$('#grid').classList.toggle('hidden',catalog);$('#universe').classList.toggle('hidden',catalog);$('#status').classList.toggle('hidden',tab==='owned');$('#ownedStatusFilter').classList.toggle('hidden',tab!=='owned');if(catalog)loadCatalog();else render()}
 $('#catalogBtn').onclick=()=>selectTab('catalog');
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>selectTab(b.dataset.tab));
+$('#catalogNavigation').addEventListener('click',event=>{const button=event.target.closest('button[data-catalog-level]');if(!button)return;const level=button.dataset.catalogLevel,key=decodeURIComponent(button.dataset.key||'');if(level==='universe'){catalogNav=catalogNav.universe===key?{universe:'',division:'',category:'',faction:''}:{universe:key,division:'',category:'',faction:''}}else if(level==='division'){catalogNav.division=catalogNav.division===key?'':key;catalogNav.faction=''}else if(level==='faction'){catalogNav.faction=catalogNav.faction===key?'':key}else if(level==='category'){catalogNav.category=catalogNav.category===key?'':key}renderCatalog(visibleCatalogRows())});
 $('#search').addEventListener('input',render);
 ['universe','status','sortBy','ownedStatusFilter'].forEach(id=>$('#'+id).addEventListener('change',render));
 $('#itemForm').onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));const previous=editing?items.find(x=>x.id===editing):{};const obj={...previous,...d,price:Number(d.price)||0,id:editing||crypto.randomUUID()};if(editing)items=items.map(x=>x.id===editing?obj:x);else items.unshift(obj);save(obj);$('#itemDialog').close()};
