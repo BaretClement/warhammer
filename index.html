@@ -131,12 +131,7 @@ dialog{background:#fff;color:var(--ink);border-color:var(--line);box-shadow:0 24
 .stat-secondary{grid-column:span 1;aspect-ratio:auto;min-height:72px;flex-direction:column;flex-wrap:nowrap;align-items:center;justify-content:center;gap:0;padding:10px}
 .stat-secondary strong{font-size:clamp(17px,1.6vw,20px);font-variant-numeric:tabular-nums}
 .stat-secondary span{font-size:9px;letter-spacing:.07em;white-space:nowrap}
-.collection-status-picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
-.collection-status-picker[hidden]{display:none!important}
-.collection-status-picker .picker-label{grid-column:1/-1;margin:0;color:var(--muted);font-size:11px}
-.collection-status-picker button{border:1px solid var(--line);border-radius:5px;background:#f7f8f6;color:var(--ink);padding:8px 10px;font-size:12px;font-weight:600}
-.collection-status-picker button:hover{background:#eef3ec;border-color:#a5b79d}
-.collection-status-picker button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.iconbutton.paint-icon.is-active{color:#fff;background:#537b4e;border-color:#537b4e}
 #catalogNavigation+#catalogGrid>.army-grid{padding-top:10px;margin-top:0}
 #catalogNavigation{gap:0}
 #catalogNavigation>.catalog-level{padding:10px 0}
@@ -276,8 +271,7 @@ function catalogSearchChip(label,count,tone){return`<span class="taxonomy-button
 function renderCatalogProducts(products){
  if(!products.length)return '<div class="empty"><strong>Aucune figurine à afficher</strong>Essayez d’ajuster les filtres de recherche ou de statut.</div>';
  return `<div class="grid army-grid">${products.map(x=>{
-  const item=catalogItem(x),isOwned=!!item&&owned(item),isWishlisted=!!item&&wishlisted(item);
-  const collectionAction=isOwned?`addCatalogItem('${esc(x.id)}','À peindre')`:'toggleCollectionChoices(this)';
+  const item=catalogItem(x),isOwned=!!item&&owned(item),isWishlisted=!!item&&wishlisted(item),isPainted=!!item&&item.status==='Peinte';
   return `<article class="card catalog-card ${isOwned?'is-owned':isWishlisted?'is-wishlisted':''}">
    <div class="art">${x.image_url?`<img src="${esc(x.image_url)}" alt="${esc(x.name)}" onerror="this.remove()">`:`<span class="placeholder">✠</span>`}
     <div class="art-labels"><span class="pill universe-badge">${esc(catalogUniverseBadge(x.universe))}</span>${isOwned?'<span class="collection-mark is-owned">✓ Possédée</span>':isWishlisted?'<span class="collection-mark is-wishlisted">♥ Wishlist</span>':''}</div>
@@ -288,10 +282,10 @@ function renderCatalogProducts(products){
     <div class="meta"><span class="status">${Number(x.price_eur||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'})}</span>
      <div class="cardactions">
       <button class="mini iconbutton wish-icon ${isWishlisted?'is-active':''}" onclick="addCatalogItem('${esc(x.id)}','À acheter')" aria-label="${isWishlisted?'Retirer':'Ajouter'} ${esc(x.name)} ${isWishlisted?'de la':'à la'} wishlist" aria-pressed="${isWishlisted}" title="${isWishlisted?'Retirer de':'Ajouter à'} la wishlist"><svg viewBox="0 0 24 24" fill="${isWishlisted?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg></button>
-      <button class="mini iconbutton owned-icon ${isOwned?'is-active':''}" onclick="${collectionAction}" aria-label="${isOwned?'Retirer':'Ajouter'} ${esc(x.name)} ${isOwned?'de':'à'} Ma collection" aria-pressed="${isOwned}" aria-expanded="false" title="${isOwned?'Retirer de':'Ajouter à'} Ma collection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="mini iconbutton owned-icon ${isOwned?'is-active':''}" onclick="addCatalogItem('${esc(x.id)}','À peindre')" aria-label="${isOwned?'Retirer':'Ajouter'} ${esc(x.name)} ${isOwned?'de':'à'} Ma collection" aria-pressed="${isOwned}" title="${isOwned?'Retirer de':'Ajouter à'} Ma collection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      ${isOwned?`<button class="mini iconbutton paint-icon ${isPainted?'is-active':''}" onclick="togglePaintStatus('${esc(x.id)}')" aria-label="${isPainted?'Marquer comme à peindre':'Marquer comme peinte'} : ${esc(x.name)}" aria-pressed="${isPainted}" title="${isPainted?'Marquer comme à peindre':'Marquer comme peinte'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14.5 5.5 4 4M16.5 3.5l4 4-9.8 9.8c-1.5 1.5-3.7 1.3-5.3 2.7.2-2 1.2-3.8 2.5-5.1l8.6-8.4Z"/><path d="M5.5 20c1.4-1.4 3.1-.7 4.2-1.8"/></svg></button>`:''}
      </div>
     </div>
-    <div class="collection-status-picker" hidden><p class="picker-label">Choisir l’état de la figurine</p><button type="button" onclick="addCatalogItem('${esc(x.id)}','Peinte')">Peinte</button><button type="button" onclick="addCatalogItem('${esc(x.id)}','À peindre')">À peindre</button></div>
    </div>
   </article>`
  }).join('')}</div>`
@@ -413,7 +407,7 @@ function renderCatalog(rows){
 }
 async function loadCatalog(){if(catalogLoaded||catalogLoading)return;if(!supabaseClient){setCloudMessage('Le catalogue partagé n’est pas configuré.');return}catalogLoading=true;$('#catalogGrid').innerHTML='<div class="empty">Chargement du catalogue…</div>';let data=[],error=null;for(let from=0;;from+=1000){const result=await supabaseClient.from(CATALOG_TABLE).select('*').order('universe').order('faction').order('name').range(from,from+999);if(result.error){error=result.error;break}const page=result.data||[];data.push(...page);if(page.length<1000)break}catalogLoading=false;if(error){$('#catalogGrid').innerHTML='<div class="empty"><strong>Catalogue indisponible</strong>Vérifiez que le catalogue est installé dans Supabase et que sa lecture publique est activée.</div>';setCloudMessage('Lecture du catalogue impossible : '+error.message);return}window.catalogRows=data;const selected=$('#universe').value,options=[...new Set(data.map(item=>item.universe).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));$('#universe').innerHTML='<option value="">Tous les univers</option>'+options.map(value=>`<option value="${esc(value)}">${esc(value)}</option>`).join('');$('#universe').value=options.includes(selected)?selected:'';catalogLoaded=true;renderCatalog(visibleCatalogRows())}
 window.addCatalogItem=async(id,status='À acheter')=>{const x=window.catalogRows?.find(row=>row.id===id);if(!x)return;const {data:{session}}=await supabaseClient.auth.getSession();if(!session){setCloudMessage('Vous pouvez consulter le catalogue sans compte. Connectez-vous pour classer une figurine dans votre collection ou votre wishlist.');$('#loginEmail').focus();return}let item=catalogItem(x);if(item){const active=status==='À acheter'?wishlisted(item):owned(item);if(active){item.status='Non classée';delete item.rating;save(item);setCloudMessage(status==='À acheter'?'Figurine retirée de votre wishlist.':'Figurine retirée de Ma collection.');return}item.status=status;save(item);setCloudMessage(status==='À acheter'?'Figurine déplacée dans votre wishlist.':'Figurine ajoutée à Ma collection.');return}item={id:crypto.randomUUID(),name:x.name,universe:x.universe||'Univers non renseigné',faction:x.faction,status,price:Number(x.price_eur)||0,image:x.image_url||'',description:x.description||'',notes:'',catalog_id:x.id,product_url:x.product_url};items.unshift(item);save(item);setCloudMessage(status==='À acheter'?'Ajouté à votre wishlist.':'Ajouté à Ma collection.')}
-window.toggleCollectionChoices=button=>{const card=button.closest('.catalog-card'),picker=card?.querySelector('.collection-status-picker');if(!picker)return;picker.hidden=!picker.hidden;button.setAttribute('aria-expanded',String(!picker.hidden));if(!picker.hidden)picker.querySelector('button')?.focus({preventScroll:true})}
+window.togglePaintStatus=id=>{const item=items.find(value=>value.catalog_id===id);if(!item||!owned(item))return;item.status=item.status==='Peinte'?'À peindre':'Peinte';save(item);setCloudMessage(item.status==='Peinte'?'Figurine marquée comme peinte.':'Figurine marquée à peindre.')}
 function openModal(item=null){
  editing=item?.id||null;const f=$('#itemForm');f.reset();$('#modalTitle').textContent=item?'Modifier la figurine':'Ajouter une figurine';$('#deleteBtn').classList.toggle('hidden',!item);
  if(item) for(const k of ['name','universe','faction','status','price','image','description','notes']) f.elements[k].value=item[k]??'';
