@@ -67,7 +67,6 @@ dialog{background:#fff;color:var(--ink);border-color:var(--line);box-shadow:0 24
 .taxonomy-button .taxonomy-footer{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;margin-top:auto}
 .taxonomy-button .taxonomy-label{white-space:nowrap}
 .taxonomy-button.top-level{height:164px;min-height:164px;flex-direction:column;align-items:stretch;justify-content:space-between;padding:15px 18px}
-.universe-emblem{display:grid;place-items:center;width:70px;height:54px;border:1px solid currentColor;border-radius:5px;font:700 20px/1 Georgia,serif;letter-spacing:.06em}
 .taxonomy-button.army-level{height:112px;min-height:112px;flex:1 1 220px;min-width:max-content;flex-direction:column;align-items:stretch;justify-content:flex-end;padding:12px 15px;background:#f2f5fa;border-color:#cad5e4;color:#465e7a}
 .taxonomy-button.army-level.is-active{background:#dfe8f4;border-color:#91a9c6;color:#334f70}
 .taxonomy-button.faction-level{height:76px;min-height:76px;flex:0 0 auto;min-width:max-content;flex-direction:column;align-items:stretch;justify-content:flex-end;padding:10px 13px;background:#fbf7ed;border-color:#e7d9b8;color:#80662f}
@@ -91,10 +90,17 @@ dialog{background:#fff;color:var(--ink);border-color:var(--line);box-shadow:0 24
 .taxonomy-button.top-level .tax-count{font-size:11px}
 .taxonomy-button.army-level .tax-count{font-size:10px}
 .taxonomy-button.faction-level .tax-count{font-size:10px}
-.taxonomy-button.top-level .universe-emblem{border-color:currentColor}
 .taxonomy-button.search-path-chip{background:#fff;border-color:#d9ddd8;color:#30332f}
 .taxonomy-button.search-path-chip.army-level{font-size:14px}
 .taxonomy-button.search-path-chip.faction-level{font-size:12px}
+.stats{grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch}
+.stat-primary{grid-column:span 2;aspect-ratio:1.65/1}
+.stat-primary strong{font-size:clamp(28px,3.4vw,42px)}
+.stat-primary span{font-size:12px}
+.stat-secondary{grid-column:span 1;aspect-ratio:2.35/1;min-height:74px;flex-direction:row;flex-wrap:wrap;align-content:center;gap:5px 7px;padding:12px}
+.stat-secondary strong{font-size:clamp(18px,1.8vw,23px)}
+.stat-secondary span{font-size:10px;letter-spacing:.08em}
+@media(max-width:650px){.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.stat-primary{grid-column:span 1;aspect-ratio:1/1;padding:12px}.stat-primary strong{font-size:clamp(22px,7vw,30px)}.stat-primary span{font-size:10px}.stat-secondary{aspect-ratio:auto;min-height:70px;padding:10px;gap:4px 6px}.stat-secondary strong{font-size:18px}.stat-secondary span{font-size:9px}}
 </style>
 </head>
 <body>
@@ -115,10 +121,12 @@ dialog{background:#fff;color:var(--ink);border-color:var(--line);box-shadow:0 24
  <div class="actions"><button class="btn" id="exportBtn">Exporter en PDF</button></div>
 </section>
 <section class="stats">
- <div class="stat"><strong id="ownedCount">0</strong><span>Collection</span></div>
- <div class="stat"><strong id="ownedValue">0,00 €</strong><span>Valeur possédée</span></div>
- <div class="stat"><strong id="wishCount">0</strong><span>Wishlist</span></div>
- <div class="stat"><strong id="budget">0 €</strong><span>Budget souhaité</span></div>
+ <div class="stat stat-primary"><strong id="ownedCount">0</strong><span>Possédées</span></div>
+ <div class="stat stat-primary"><strong id="ownedValue">0,00 €</strong><span>Valeur totale</span></div>
+ <div class="stat stat-secondary"><strong id="wishCount">0</strong><span>Souhaitées</span></div>
+ <div class="stat stat-secondary"><strong id="budget">0 €</strong><span>De budget</span></div>
+ <div class="stat stat-secondary"><strong id="paintedCount">0</strong><span>Peintes</span></div>
+ <div class="stat stat-secondary"><strong id="toPaintCount">0</strong><span>À peindre</span></div>
 </section>
 <div class="toolbar">
  <nav class="tabs" aria-label="Vues des figurines"><button class="tab active" data-tab="catalog">Catalogue</button><button class="tab" data-tab="owned">Ma collection</button><button class="tab" data-tab="wishlist">Wishlist</button></nav>
@@ -178,6 +186,8 @@ function ratingControl(item){const rating=Math.max(0,Math.min(5,Number(item.rati
 window.rateItem=(id,rating)=>{const item=items.find(value=>value.id===id);if(!item||!owned(item))return;item.rating=rating;save(item)};
 function render(){
  $('#ownedCount').textContent=items.filter(owned).length;
+ $('#paintedCount').textContent=items.filter(item=>item.status==='Peinte').length;
+ $('#toPaintCount').textContent=items.filter(item=>item.status==='À peindre').length;
  $('#wishCount').textContent=items.filter(wishlisted).length;
  const ownedSum=items.filter(owned).reduce((a,x)=>a+(Number(x.price)||0),0);
  $('#ownedValue').textContent=ownedSum.toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
@@ -213,7 +223,7 @@ function catalogDivision(product){
  return Object.entries(ARMY_CATEGORIES).find(([,factions])=>factions.includes(faction))?.[0]||product.army_group||'';
 }
 function catalogAgeOfSigmarDivision(product){const faction=catalogFaction(product.faction||'');return Object.entries(AOS_CATEGORIES).find(([,factions])=>factions.includes(faction))?.[0]||'Autres produits'}
-function catalogNavButton(level,key,label,count,tone,active,disabled=false){const emblem=level==='universe'&&key!=='Age of Sigmar'?`<span class="universe-emblem" aria-hidden="true">${key==='Warhammer 40,000'?'40,000':key==='Seigneur des Anneaux'?'LOTR':esc(label.slice(0,5))}</span>`:'';return`<button type="button" class="taxonomy-button ${tone}${active?' is-active':''}" data-catalog-level="${level}" data-key="${esc(encodeURIComponent(key))}" aria-pressed="${active}" ${disabled?'disabled':''}>${emblem}<span class="taxonomy-footer"><span class="taxonomy-label">${esc(label)}</span><span class="tax-count">${Number(count||0).toLocaleString('fr-FR')}</span></span></button>`}
+function catalogNavButton(level,key,label,count,tone,active,disabled=false){return`<button type="button" class="taxonomy-button ${tone}${active?' is-active':''}" data-catalog-level="${level}" data-key="${esc(encodeURIComponent(key))}" aria-pressed="${active}" ${disabled?'disabled':''}><span class="taxonomy-footer"><span class="taxonomy-label">${esc(label)}</span><span class="tax-count">${Number(count||0).toLocaleString('fr-FR')}</span></span></button>`}
 function catalogSearchChip(label,count,tone){return`<span class="taxonomy-button ${tone} is-active search-path-chip"><span>${esc(label)}</span><span class="tax-count">${Number(count||0).toLocaleString('fr-FR')}</span></span>`}
 function renderCatalogProducts(products){return products.length?`<div class="grid army-grid">${products.map(x=>{const item=catalogItem(x),isOwned=!!item&&owned(item),isWishlisted=!!item&&wishlisted(item);return`<article class="card catalog-card ${isOwned?'is-owned':isWishlisted?'is-wishlisted':''}"><div class="art">${x.image_url?`<img src="${esc(x.image_url)}" alt="${esc(x.name)}" onerror="this.remove()">`:`<span class="placeholder">✠</span>`}<div class="art-labels"><span class="pill">${esc(catalogFaction(x.faction||'Autres'))}</span>${isOwned?'<span class="collection-mark is-owned">✓ Possédée</span>':isWishlisted?'<span class="collection-mark is-wishlisted">♥ Wishlist</span>':''}</div></div><div class="cardbody"><div class="universe">${esc(x.universe)}</div>${productTitle(x)}<div class="faction">${esc(x.description||'')}</div>${isOwned?ratingControl(item):''}<div class="meta"><span class="status">${Number(x.price_eur||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'})}</span><div class="cardactions"><button class="mini iconbutton wish-icon ${isWishlisted?'is-active':''}" onclick="addCatalogItem('${esc(x.id)}','À acheter')" aria-label="${isWishlisted?'Retirer':'Ajouter'} ${esc(x.name)} ${isWishlisted?'de la':'à la'} wishlist" aria-pressed="${isWishlisted}" title="${isWishlisted?'Retirer de':'Ajouter à'} la wishlist"><svg viewBox="0 0 24 24" fill="${isWishlisted?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg></button><button class="mini iconbutton owned-icon ${isOwned?'is-active':''}" onclick="addCatalogItem('${esc(x.id)}','À peindre')" aria-label="${isOwned?'Retirer':'Ajouter'} ${esc(x.name)} ${isOwned?'de':'à'} Ma collection" aria-pressed="${isOwned}" title="${isOwned?'Retirer de':'Ajouter à'} Ma collection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div></div></article>`}).join('')}</div>`:`<div class="empty"><strong>Aucune figurine à afficher</strong>Essayez d’ajuster les filtres de recherche ou de statut.</div>`}
 function renderCatalogSearch(rows,universeLabels){
