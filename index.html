@@ -143,6 +143,26 @@ dialog{background:#fff;color:var(--ink);border-color:var(--line);box-shadow:0 24
 #catalogNavigation>.faction-level-row::before{content:"Factions"}
 @media(max-width:650px){.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0 17px}.stat{padding:10px}.stat-primary{grid-column:span 1;min-height:124px;aspect-ratio:auto;gap:3px}.stat-primary strong{font-size:clamp(24px,7vw,32px)}.stat-primary span{font-size:9px}.stat-secondary{min-height:68px;padding:8px;gap:0}.stat-secondary strong{font-size:17px}.stat-secondary span{font-size:8px;letter-spacing:.04em}}
 @media(max-width:650px){.taxonomy-button.top-level .taxonomy-label{font-size:20px}.taxonomy-button.army-level .taxonomy-label{font-size:16px}}
+.combat-patrol-heading{display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:22px 0 14px}
+.combat-patrol-heading h2{font:500 clamp(24px,3vw,32px)/1.15 Georgia,serif;margin:0 0 5px}
+.combat-patrol-heading p{margin:0;color:var(--muted);font-size:13px}
+.combat-patrol-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.combat-patrol-tools input{width:min(280px,100%);padding:9px 11px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink)}
+.combat-patrol-summary{font-size:12px;color:var(--muted)}
+.combat-patrol-sources{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 18px;font-size:12px}
+.combat-patrol-sources a{color:var(--muted);text-underline-offset:3px}
+.combat-patrol-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.combat-patrol-card{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.combat-patrol-card header{display:flex;justify-content:space-between;align-items:center;border:0;border-bottom:1px solid var(--line);padding:0 0 9px;margin:0 0 9px}
+.combat-patrol-card .issue-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.combat-patrol-card .issue-number{font:500 23px/1 Georgia,serif;color:var(--gold);font-variant-numeric:tabular-nums}
+.combat-patrol-release{display:grid;grid-template-columns:76px 1fr auto;align-items:center;gap:7px;padding:5px 0;font-size:12px}
+.combat-patrol-country{color:var(--muted)}
+.combat-patrol-date{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.combat-patrol-state{font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--green);white-space:nowrap}
+.combat-patrol-state.upcoming{color:var(--gold)}
+.combat-patrol-disclaimer{margin:14px 0 0;color:var(--muted);font-size:11px}
+@media(max-width:650px){.combat-patrol-heading{align-items:stretch;margin-top:18px}.combat-patrol-tools input{width:100%;flex:1}.combat-patrol-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:9px}.combat-patrol-card{padding:12px}.combat-patrol-release{grid-template-columns:68px 1fr auto;gap:5px;font-size:11px}}
 </style>
 </head>
 <body>
@@ -162,7 +182,7 @@ dialog{background:#fff;color:var(--ink);border-color:var(--line);box-shadow:0 24
  <div><div class="eyebrow">Inventaire & convoitises</div><h2>Votre arsenal,<br>votre histoire.</h2><p>Un catalogue personnel pour suivre les figurines possédées, celles en cours de peinture et les prochaines pièces à rejoindre vos vitrines.</p></div>
  <div class="actions"><button class="btn" id="exportBtn">Exporter en PDF</button></div>
 </section>
-<section class="stats">
+<section class="stats" id="stats">
  <div class="stat stat-primary"><strong id="ownedCount">0</strong><span>Possédées</span></div>
  <div class="stat stat-primary"><strong id="ownedValue">0,00 €</strong><span>Valeur totale</span></div>
  <div class="stat stat-secondary"><strong id="paintedCount">0</strong><span>Peintes</span></div>
@@ -171,12 +191,13 @@ dialog{background:#fff;color:var(--ink);border-color:var(--line);box-shadow:0 24
  <div class="stat stat-secondary"><strong id="budget">0 €</strong><span>De budget</span></div>
 </section>
 <div class="toolbar">
- <nav class="tabs" aria-label="Vues des figurines"><button class="tab active" data-tab="catalog">Catalogue</button><button class="tab" data-tab="owned">Ma collection</button><button class="tab" data-tab="wishlist">Wishlist</button></nav>
-<div class="filters"><input id="search" placeholder="Rechercher une figurine…"><select id="universe"><option value="">Tous les univers</option></select><select id="sortBy" aria-label="Trier les figurines"><option value="name">Ordre alphabétique</option><option value="faction">Par faction</option><option value="price-asc">Prix croissant</option><option value="price-desc">Prix décroissant</option></select><select id="status"><option value="">Tous les statuts</option><option>À peindre</option><option>Peinte</option><option>À acheter</option></select><select id="ownedStatusFilter" class="hidden" aria-label="Filtrer Ma collection par état"><option value="">Tous les états</option><option>À peindre</option><option>Peinte</option></select></div>
+ <nav class="tabs" aria-label="Vues des figurines"><button class="tab active" data-tab="catalog">Catalogue</button><button class="tab" data-tab="owned">Ma collection</button><button class="tab" data-tab="wishlist">Wishlist</button><button class="tab" data-tab="combat-patrol">Combat Patrol</button></nav>
+<div class="filters" id="filters"><input id="search" placeholder="Rechercher une figurine…"><select id="universe"><option value="">Tous les univers</option></select><select id="sortBy" aria-label="Trier les figurines"><option value="name">Ordre alphabétique</option><option value="faction">Par faction</option><option value="price-asc">Prix croissant</option><option value="price-desc">Prix décroissant</option></select><select id="status"><option value="">Tous les statuts</option><option>À peindre</option><option>Peinte</option><option>À acheter</option></select><select id="ownedStatusFilter" class="hidden" aria-label="Filtrer Ma collection par état"><option value="">Tous les états</option><option>À peindre</option><option>Peinte</option></select></div>
 </div>
 <section id="catalogSection"><div class="catalogbar"><p>Catalogue partagé · choisissez un univers, puis une armée et une faction.</p></div><div class="catalog-navigation" id="catalogNavigation" aria-live="polite"></div><div id="catalogGrid"></div></section>
 <main class="grid" id="grid"></main>
-<div class="note"><strong>Synchronisation.</strong> La collection est conservée sur cet appareil et peut être exportée à tout moment. Connectez-vous avec la même adresse e-mail sur chacun de vos appareils pour synchroniser votre collection privée.</div>
+<section id="combatPatrolSection" class="hidden" aria-labelledby="combatPatrolTitle"><div class="combat-patrol-heading"><div><h2 id="combatPatrolTitle">Warhammer 40,000 : Combat Patrol</h2><p>Calendrier de parution des 90 numéros en France, Italie et Espagne.</p></div></div><div class="combat-patrol-tools"><span class="combat-patrol-summary" id="combatPatrolSummary"></span><input id="issueSearch" type="search" inputmode="numeric" placeholder="Rechercher un numéro…" aria-label="Rechercher un numéro Combat Patrol"></div><nav class="combat-patrol-sources" aria-label="Sources des dates"><a href="https://www.hachette-collections.com/fr-fr/collection-warhammer-combatpatrol/" target="_blank" rel="noopener">Hachette France</a><a href="https://shop.hachette.it/warhammer-combat-patrol?pagesize=100" target="_blank" rel="noopener">Hachette Italie</a><a href="https://www.salvat.com/warhammer-combat-patrol-309" target="_blank" rel="noopener">Salvat Espagne</a><a href="https://www.fauxhammer.com/news/warhammer-40000-combat-patrol-magazine-contents-list-issues-1-80/" target="_blank" rel="noopener">Calendrier détaillé</a></nav><div id="combatPatrolGrid" class="combat-patrol-grid"></div><p class="combat-patrol-disclaimer">Les parutions futures sont prévisionnelles : les éditeurs peuvent décaler leur calendrier. Les dates indiquées correspondent aux sorties en kiosque, pas aux dates de livraison des abonnements.</p></section>
+<div class="note" id="inventoryNote"><strong>Synchronisation.</strong> La collection est conservée sur cet appareil et peut être exportée à tout moment. Connectez-vous avec la même adresse e-mail sur chacun de vos appareils pour synchroniser votre collection privée.</div>
 </div>
 <dialog id="itemDialog">
  <form id="itemForm">
@@ -195,6 +216,7 @@ dialog{background:#fff;color:var(--ink);border-color:var(--line);box-shadow:0 24
  </form>
 </dialog>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="combat-patrol-schedule.js"></script>
 <script>
 // Configuration publique du projet Supabase (jamais la clé service_role).
 const SUPABASE_URL='https://olyelylmqzkbrfdyzkdl.supabase.co';
@@ -240,6 +262,15 @@ function render(){
  const shown=sortRows(inTab.filter(x=>(!q||normalizeSearchText([x.name,x.faction,x.notes,x.description,x.universe].join(' ')).includes(q))&&(!u||canonicalUniverse(x.universe)===canonicalUniverse(u))&&(!s||x.status===s)&&(!ownedState||x.status===ownedState)));
  $('#grid').innerHTML=shown.length?shown.map(x=>`<article class="card"><div class="art">${x.image?`<img src="${esc(x.image)}" alt="${esc(x.name)}" onerror="this.remove()">`:`<span class="placeholder">✠</span>`}<span class="pill">${esc(x.status)}</span></div><div class="cardbody"><div class="universe">${esc(universeDisplayLabel(x.universe))}</div>${productTitle(x)}<div class="faction">${esc(x.faction||'Faction non renseignée')}</div>${x.description?`<p class="faction">${esc(x.description)}</p>`:''}${owned(x)?ratingControl(x):''}<div class="meta"><span class="status">${x.price?Number(x.price).toLocaleString('fr-FR',{style:'currency',currency:'EUR'}):'Prix non renseigné'}</span><div class="cardactions"><button class="mini" onclick="editItem('${x.id}')">Modifier</button></div></div></div></article>`).join(''):`<div class="empty"><strong>${inTab.length?'Aucun résultat':tab==='owned'?'Aucune figurine possédée':'Votre wishlist est vide.'}</strong>${inTab.length?'Essayez de modifier vos filtres.':'Ajoutez des figurines depuis le catalogue.'}</div>`;
  if(catalogLoaded&&window.catalogRows)renderCatalog(visibleCatalogRows());
+ if(tab==='combat-patrol')renderCombatPatrol();
+}
+function renderCombatPatrol(){
+ const schedule=window.COMBAT_PATROL_SCHEDULE||[],query=$('#issueSearch').value.replace(/\D/g,''),today=new Date().toISOString().slice(0,10);
+ const issues=schedule.filter(entry=>!query||String(entry.issue).includes(query));
+ const dateLabel=iso=>new Date(`${iso}T12:00:00Z`).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'});
+ const release=(country,iso)=>{const upcoming=iso>today;return`<div class="combat-patrol-release"><span class="combat-patrol-country">${country}</span><time class="combat-patrol-date" datetime="${iso}">${dateLabel(iso)}</time><span class="combat-patrol-state ${upcoming?'upcoming':''}">${upcoming?'Prévue':'Parue'}</span></div>`};
+ $('#combatPatrolSummary').textContent=query?`${issues.length} numéro${issues.length===1?'':'s'} correspondant${issues.length===1?'':'s'}`:`${schedule.length} numéros · dates kiosque`;
+ $('#combatPatrolGrid').innerHTML=issues.length?issues.map(entry=>`<article class="combat-patrol-card"><header><span class="issue-label">Fascicule</span><strong class="issue-number">N°${String(entry.issue).padStart(2,'0')}</strong></header>${release('France',entry.france)}${release('Italie',entry.italy)}${release('Espagne',entry.spain)}</article>`).join(''):'<div class="empty"><strong>Aucun numéro trouvé</strong>Essayez avec un autre numéro entre 1 et 90.</div>';
 }
 function catalogItem(x){return items.find(item=>item.catalog_id===x.id)}
 function normalizeSearchText(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[™®©]/g,'').toLocaleLowerCase('fr').replace(/\s+/g,' ').trim()}
@@ -435,10 +466,11 @@ function openModal(item=null){
 }
 window.editItem=id=>openModal(items.find(x=>x.id===id));
 $('#closeModal').onclick=$('#cancelBtn').onclick=()=>$('#itemDialog').close();
-function selectTab(next){tab=next;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));const catalog=tab==='catalog';$('#catalogSection').classList.toggle('hidden',!catalog);$('#grid').classList.toggle('hidden',catalog);$('#universe').classList.toggle('hidden',catalog);$('#status').classList.toggle('hidden',tab==='owned');$('#ownedStatusFilter').classList.toggle('hidden',tab!=='owned');if(catalog)loadCatalog();else render()}
+function selectTab(next){tab=next;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));const catalog=tab==='catalog',combatPatrol=tab==='combat-patrol';$('#catalogSection').classList.toggle('hidden',!catalog);$('#grid').classList.toggle('hidden',catalog||combatPatrol);$('#combatPatrolSection').classList.toggle('hidden',!combatPatrol);$('#stats').classList.toggle('hidden',combatPatrol);$('#inventoryNote').classList.toggle('hidden',combatPatrol);$('#filters').classList.toggle('hidden',combatPatrol);$('#universe').classList.toggle('hidden',catalog);$('#status').classList.toggle('hidden',tab==='owned'||combatPatrol);$('#ownedStatusFilter').classList.toggle('hidden',tab!=='owned');if(catalog)loadCatalog();else if(combatPatrol)renderCombatPatrol();else render()}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>selectTab(b.dataset.tab));
 $('#catalogNavigation').addEventListener('click',event=>{const button=event.target.closest('button[data-catalog-level]');if(!button)return;const level=button.dataset.catalogLevel,key=decodeURIComponent(button.dataset.key||'');if(level==='universe'){catalogNav=catalogNav.universe===key?{universe:'',division:'',category:'',faction:''}:{universe:key,division:'',category:'',faction:''}}else if(level==='division'){catalogNav.division=catalogNav.division===key?'':key;catalogNav.faction=''}else if(level==='faction'){catalogNav.faction=catalogNav.faction===key?'':key}else if(level==='category'){catalogNav.category=catalogNav.category===key?'':key}renderCatalog(visibleCatalogRows())});
 $('#search').addEventListener('input',render);
+$('#issueSearch').addEventListener('input',renderCombatPatrol);
 ['universe','status','sortBy','ownedStatusFilter'].forEach(id=>$('#'+id).addEventListener('change',render));
 $('#itemForm').onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));const previous=editing?items.find(x=>x.id===editing):{};const obj={...previous,...d,price:Number(d.price)||0,id:editing||crypto.randomUUID()};if(editing)items=items.map(x=>x.id===editing?obj:x);else items.unshift(obj);save(obj);$('#itemDialog').close()};
 $('#deleteBtn').onclick=async()=>{if(editing&&confirm('Supprimer cette figurine du catalogue ?')){const id=editing;items=items.filter(x=>x.id!==id);localStorage.setItem(KEY,JSON.stringify(items));const pending=getPending();delete pending.upserts[id];if(!pending.deletes.includes(id))pending.deletes.push(id);putPending(pending);render();$('#itemDialog').close();const {data:{session}}=supabaseClient?await supabaseClient.auth.getSession():{data:{session:null}};if(session){const {error}=await supabaseClient.from(CLOUD_TABLE).upsert({id,user_id:session.user.id,item:null,deleted:true},{onConflict:'user_id,id'});if(!error){const latest=getPending();latest.deletes=latest.deletes.filter(value=>value!==id);putPending(latest)}setCloudMessage(error?'Suppression locale faite ; suppression cloud en attente : '+error.message:'Figurine supprimée et synchronisée.')}}};
